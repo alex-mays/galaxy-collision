@@ -1,0 +1,62 @@
+GlowScript 3.0 VPython
+
+G = 6.67E-11
+AU = 1.5E11
+YEAR = 365.25*24*60*60
+SM = 2E30
+BHM = SM*2E6
+
+r0 = 5.2*AU*2**(-2./3.)
+h = 1E6
+t = 0
+avg = 0
+avg2 = 0
+
+scene.autoscale = 1
+
+g1 = graph(title='Velocity of MW over time', ytitle='MW Vel', xtitle='Time')
+g2 = gcurve(graph=g1)
+
+blackhole = sphere(pos=vec(0,0,0), radius=3.5E10, mass=SM, color=color.black)
+blackhole2 = sphere(pos=vec(15*AU,0,0), radius=3.5E10, mass=SM, color=color.black)
+blackhole.vel = vec(sqrt(G*blackhole.mass/(5.2*AU)), 0, 0)
+blackhole2.vel = vec(-sqrt(G*blackhole2.mass/(5.2*AU)), 0, 0)
+
+star_list = [] 
+for i in range(0, 200):
+    angle = i*2*pi/100
+    r0 = (2.2 + 1.6*random())*AU
+    star = ellipsoid(pos=vec(r0 * cos(angle), r0*sin(angle), 0), length=1.8E10, width=0.9E10, height=0.9E10, color=color.yellow)
+    star.vel = vec(-sqrt(G*blackhole.mass/r0)*sin(angle), sqrt(G*blackhole.mass/r0)*cos(angle),0)
+    star_list.append(star)
+
+star_list2 = [] 
+for j in range(0, 200):
+    angle = j*2*pi/100
+    r0 = (2.2 + 1.6*random())*AU
+    star2 = ellipsoid(pos=vec(15*AU + (r0 * cos(angle)), r0*sin(angle), 0), length=1.8E10, width=0.9E10, height=0.9E10, color=color.orange)
+    star2.vel = vec(-sqrt(G*blackhole2.mass/r0)*sin(angle), sqrt(G*blackhole2.mass/r0)*cos(angle),0)
+    star_list2.append(star2)
+
+while True:
+    for star in star_list:
+        star.vel += (-G*blackhole.mass*(star.pos-blackhole.pos)/mag(star.pos-blackhole.pos)**3 + -G*blackhole2.mass*(star.pos-blackhole2.pos)/mag(star.pos-blackhole2.pos)**3)*h
+        star.pos += star.vel*h
+        avg += mag(star.pos)
+        
+    for star2 in star_list2:
+        star2.vel += (-G*blackhole2.mass*(star2.pos-blackhole2.pos)/mag(star2.pos-blackhole2.pos)**3 + -G*blackhole.mass*(star2.pos-blackhole.pos)/mag(star2.pos-blackhole.pos)**3)*h
+        star2.pos += star2.vel*h
+        avg2 += mag(star2.pos)
+        
+    avg = avg/len(star_list)
+    avg2 = avg2/len(star_list2)
+    blackhole.vel += (-G*blackhole2.mass*(blackhole.pos-blackhole2.pos)/mag(blackhole.pos-blackhole2.pos)**3)*h
+    blackhole.pos += blackhole.vel*h
+    blackhole2.vel += (-G*blackhole.mass*(blackhole2.pos-blackhole.pos)/mag(blackhole2.pos-blackhole.pos)**3)*h
+    blackhole2.pos += blackhole2.vel*h
+    g2.plot(t, blackhole.vel.x) 
+
+    t += h
+    rate(20)
+    
